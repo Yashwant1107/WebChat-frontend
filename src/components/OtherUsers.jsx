@@ -18,6 +18,14 @@ const OtherUsers = ({ searchQuery = '' }) => {
     return searchableText.includes(normalizedSearchQuery);
   });
 
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    const isAOnline = onlineUsers?.includes(a._id);
+    const isBOnline = onlineUsers?.includes(b._id);
+    if (isAOnline && !isBOnline) return -1;
+    if (!isAOnline && isBOnline) return 1;
+    return 0;
+  });
+
   const selectedUserHandler = (user) => {
     console.log('Selected user:', user);
     dispatch(setSelectedChatUser(user));
@@ -31,7 +39,7 @@ const OtherUsers = ({ searchQuery = '' }) => {
         </p>
       ) : null}
 
-      {filteredUsers.map((user) => (
+      {sortedUsers.map((user) => (
         <div
           key={user._id}
           onClick={() => selectedUserHandler(user)}

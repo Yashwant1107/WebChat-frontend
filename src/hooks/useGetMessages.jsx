@@ -2,6 +2,8 @@ import axios from 'axios';
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setMessages } from '../redux/messageSlice';
+import { BASE_URL } from '../config';
+import { getAuthConfig } from '../utils/auth';
 
 const getId = (value) => {
     if (!value) {
@@ -24,8 +26,8 @@ const useGetMessages = () => {
 
         const fetchMessages = async () => {
             try {
-                const response = await axios.get(`http://localhost:8080/api/v1/message/${selectedChatUser._id}`, {
-                    withCredentials: true,
+                const response = await axios.get(`${BASE_URL}/api/v1/message/${selectedChatUser._id}`, {
+                    ...getAuthConfig(),
                 });
                 const messages = (response.data.messages ?? []).map((message) => ({
                     ...message,

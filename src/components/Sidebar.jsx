@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import OtherUsers from './OtherUsers';
 import { clearAuthUser } from '../redux/userSlice';
+import { BASE_URL } from '../config';
+import { clearAuthToken, getAuthConfig } from '../utils/auth';
 
 const Sidebar = () => {
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -21,10 +23,9 @@ const Sidebar = () => {
   
   const logoutHandler = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/v1/user/logout', {
-        withCredentials: true,
-      });
+      const response = await axios.get(`${BASE_URL}/api/v1/user/logout`, getAuthConfig());
 
+      clearAuthToken();
       dispatch(clearAuthUser());
       toast.success(response.data.message);
       navigate('/login');

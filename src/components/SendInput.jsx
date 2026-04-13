@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 import { IoSend } from "react-icons/io5";
 import { useDispatch, useSelector } from 'react-redux';
 import { addMessage } from '../redux/messageSlice';
+import { BASE_URL } from '../config';
+import { getAuthConfig } from '../utils/auth';
 
 const SendInput = () => {
   const [message, setMessage] = React.useState('');
@@ -22,13 +24,20 @@ const SendInput = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:8080/api/v1/message/send/${selectedChatUser._id}`,
+        `${BASE_URL}/api/v1/message/send/${selectedChatUser._id}`,
         { message: trimmedMessage },
-        { withCredentials: true }
+        getAuthConfig()
       );
 
-      console.log(`Sent message to ${selectedChatUser.username}:`, response.data.newMessage);
-      dispatch(addMessage(response.data.newMessage));
+      const newMessage = response.data.newMessage;
+      const formattedMessage = {
+        ...newMessage,
+        senderId: newMessage.sender?._id || newMessage.sender,
+        receiverId: newMessage.receiver?._id || newMessage.receiver,
+      };
+
+      console.log(`Sent message to ${selectedChatUser.username}:`, formattedMessage);
+      dispatch(addMessage(formattedMessage));
       setMessage('');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to send message');

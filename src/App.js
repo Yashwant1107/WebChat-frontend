@@ -8,7 +8,10 @@ import Signup from "./components/Signup";
 import Login from './components/Login';
 import { clearAuthUser, setAuthLoading, setAuthUser, setOnlineUsers } from './redux/userSlice';
 import { setSocket } from './redux/socketSlice';
+import { addMessage } from './redux/messageSlice';
 import store from './redux/store';
+import { BASE_URL } from './config';
+import { clearAuthToken, getAuthConfig } from './utils/auth';
 import io from 'socket.io-client';
 
 const appBackgroundStyle = {
@@ -49,7 +52,7 @@ function App() {
 
   useEffect(() => {
     if (authUser) {
-      const socket = io('http://localhost:8080', {
+      const socket = io(`${BASE_URL}`, {
         withCredentials: true,
         auth: {
           userId: authUser._id,
@@ -70,7 +73,12 @@ function App() {
         const state = store.getState();
         const selectedChatUser = state.user?.selectedChatUser;
         if (selectedChatUser && (newMessage.sender === selectedChatUser._id || newMessage.sender?._id === selectedChatUser._id)) {
-          store.dispatch({ type: 'message/addMessage', payload: newMessage });
+          const formattedMessage = {
+            ...newMessage,
+            senderId: newMessage.sender?._id || newMessage.sender,
+            receiverId: newMessage.receiver?._id || newMessage.receiver,
+          };
+          store.dispatch(addMessage(formattedMessage));
         }
       });
 
@@ -83,7 +91,7 @@ function App() {
         socket.disconnect();
       };
     }
-  }, [authUser]);
+  }, [authUser, dispatch]);
   useEffect(() => {
     if (authCheckStarted.current) {
       return;
@@ -95,12 +103,13 @@ function App() {
       dispatch(setAuthLoading(true));
 
       try {
-        const response = await axios.get('http://localhost:8080/api/v1/user/me', {
-          withCredentials: true,
-        });
+        const response = await axios.get(`${BASE_URL}/api/v1/user/me`, getAuthConfig());
         dispatch(setAuthUser(response.data.user));
       } catch (error) {
-        dispatch(clearAuthUser());
+        if (!store.getState().user.authUser) {
+          clearAuthToken();
+          dispatch(clearAuthUser());
+        }
       }
     };
 
